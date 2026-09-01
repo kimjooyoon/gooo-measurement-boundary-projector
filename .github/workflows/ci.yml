@@ -1,13 +1,16 @@
-name: Measurement Boundary CI
+name: Measurement boundary conformance
 
-on: [pull_request, push, workflow_dispatch]
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  validation:
-    name: Go 1.27 measurement boundary validation
+  conformance:
     runs-on: ubuntu-latest
     steps:
       - name: Check out subject
