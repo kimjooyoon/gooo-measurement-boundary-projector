@@ -24,7 +24,88 @@ jobs:
           cache: false
       - name: Verify Go 1.27
         run: test "$(go env GOVERSION)" = "go1.27.0"
-      - name: Compile and build in CI
+
+      - name: Verify formatting in CI
+        shell: bash
         run: |
           set -Eeuo pipefail
-          go build ./...
+          files=$(gofmt -l $(git ls-files '*.go'))
+          if [ -n "$files" ]; then
+            printf '%s\n' "$files"
+            exit 1
+          fi
+
+      - name: Verify static analysis in CI
+        run: go vet ./...
+
+      - name: Prepare caller-owned output roots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          WORK_ROOT="$RUNNER_TEMP/gooo-measurement-boundary-projector"
+          echo "WORK_ROOT=$WORK_ROOT" >> "$GITHUB_ENV"
+          mkdir -p "$WORK_ROOT/metrics" "$WORK_ROOT/conformance" "$WORK_ROOT/integration" "$WORK_ROOT/evidence"
+          echo "METRICS_DIR=$WORK_ROOT/metrics" >> "$GITHUB_ENV"
+          echo "CONFORMANCE_OUTPUT=$WORK_ROOT/conformance" >> "$GITHUB_ENV"
+          echo "INTEGRATION_OUTPUT=$WORK_ROOT/integration" >> "$GITHUB_ENV"
+          echo "EVIDENCE_DIR=$WORK_ROOT/evidence" >> "$GITHUB_ENV"
+
+      - name: Measure compile
+        run: bash scripts/measure-stage.sh compile "$METRICS_DIR/compile.json" go build -buildmode=archive -trimpath -o "$WORK_ROOT/measurement-boundary-compile.a" ./internal/projector
+
+      - name: Measure build
+        run: bash scripts/measure-stage.sh build "$METRICS_DIR/build.json" go build -trimpath -o "$WORK_ROOT/measurement-boundary-projector" ./cmd/measurement-boundary-projector
+
+      - name: Measure Go tests
+        shell: bash
+        run: bash scripts/measure-stage.sh test "$METRICS_DIR/test.json" bash -c 'set -o pipefail; go test -json ./... | tee "$WORK_ROOT/go-test-events.jsonl"'
+
+      - name: Measure canonical conformance
+        shell: bash
+        run: bash scripts/measure-stage.sh conformance "$METRICS_DIR/conformance.json" bash scripts/conformance.sh "$WORK_ROOT/measurement-boundary-projector"
+
+      - name: Measure generated collector integration
+        shell: bash
+        run: bash scripts/measure-stage.sh integration "$METRICS_DIR/integration.json" bash scripts/integration.sh "$WORK_ROOT/measurement-boundary-projector"
+
+      - name: Inventory source and generated artifacts
+        run: "$WORK_ROOT/measurement-boundary-projector" inventory --root "$GITHUB_WORKSPACE" --generated-root "$WORK_ROOT/conformance" --out "$EVIDENCE_DIR/inventory.json"
+
+      - name: Assemble machine evidence
+        run: bash scripts/assemble-evidence.sh "$METRICS_DIR" "$WORK_ROOT/go-test-events.jsonl" "$CONFORMANCE_OUTPUT" "$INTEGRATION_OUTPUT" "$EVIDENCE_DIR/inventory.json" "$EVIDENCE_DIR/ci-evidence.json"
+
+      - name: Verify complete evidence contract
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          jq -e '
+            .workflow == "GitHub Actions" and
+            .conformance.total == 10 and .conformance.selected == 10 and .conformance.executed == 10 and .conformance.reused == 0 and .conformance.closed == 3 and .conformance.unknown == 4 and .conformance.refuted == 3 and
+            .runtime_authority == {repository_writes:0,apply_authority:0,commit_authority:0,merge_authority:0,tag_authority:0,release_authority:0,cross_project_required_gates:0} and
+            .input_repo.read_only == true and .input_repo.output_scope == "caller-owned-temp-output-only" and
+            .local_validation_commands == [] and .pr_first_conformance == "REFUTED" and
+            .OPERATIONAL_REFUTED.exact_count == 1 and .OPERATIONAL_REFUTED.stage == "AUTHORING" and
+            .OPERATIONAL_REFUTED.step == "OPEN_IMPLEMENTATION_PR_BEFORE_MAIN_INTEGRATION" and
+            .OPERATIONAL_REFUTED.reason == "INITIAL_IMPLEMENTATION_PUSH_PRECEDED_PR" and
+            .OPERATIONAL_REFUTED.initial_main_sha == "8c63fb3abb6f6026bbf274bc6b938c54b4fca3de" and
+            .OPERATIONAL_REFUTED.initial_main_run_id == "33540259958" and .OPERATIONAL_REFUTED.preserved == true and
+            ([.stage_measurements | to_entries[] | .value.wall_ms] | all(. >= 0)) and
+            ([.stage_measurements | to_entries[] | .value.peak_rss_kib] | all(. >= 0)) and
+            .inventory.root_readme_excluded == true and .inventory.go_files > 0 and .inventory.gooo_files > 0 and
+            .inventory.generated_artifacts > 0 and .inventory.generated_bytes > 0 and
+            .v048_conflict.decision == "UNKNOWN" and .v048_conflict.fail_closed == true and
+            .generated_single_authority.decision == "CLOSED" and
+            .generated_single_authority.generated_collector_ran == true and
+            .generated_single_authority.measured_once_per_metric == true and
+            .generated_single_authority.consumer_receipts_exact == true
+          ' "$EVIDENCE_DIR/ci-evidence.json" >/dev/null
+
+      - name: Publish human report to job summary
+        run: cat "$INTEGRATION_OUTPUT/human-report.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload machine and human evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: measurement-boundary-ci-evidence-${{ github.run_id }}
+          path: ${{ env.EVIDENCE_DIR }}
+          if-no-files-found: error
