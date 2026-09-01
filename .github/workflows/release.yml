@@ -77,10 +77,10 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          release_id=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$RELEASE_TAG" --jq .id 2>/dev/null || true)
+          release_id=$(gh release view "$RELEASE_TAG" --json id --jq .id 2>/dev/null || true)
           if [[ -z "$release_id" ]]; then
             gh release create "$RELEASE_TAG" --verify-tag --draft --title "gooo-measurement-boundary-projector $RELEASE_TAG" --notes "Draft-first immutable release bound to annotated tag $(git rev-parse "$RELEASE_TAG^{commit}")." "$RELEASE_ROOT/$ARCHIVE" "$RELEASE_ROOT/SHA256SUMS" "$RELEASE_ROOT/release-manifest.json"
-            release_id=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$RELEASE_TAG" --jq .id)
+            release_id=$(gh release view "$RELEASE_TAG" --json id --jq .id)
           fi
           test -n "$release_id"
           echo "RELEASE_ID=$release_id" >> "$GITHUB_ENV"
