@@ -203,11 +203,23 @@ func parseV2OptionalField(target *V2OptionalObservation, tokens []string, lineNu
 	case "step":
 		target.Step = tokens[1]
 	case "actual_main_lock_wall_ms":
-		value, err := parseInt(tokens[0], tokens[1]); if err != nil { return err }; target.ActualMainLockWallMS = value
+		value, err := parseInt(tokens[0], tokens[1])
+		if err != nil {
+			return err
+		}
+		target.ActualMainLockWallMS = value
 	case "product_receipt_baseline_wall_ms":
-		value, err := parseInt(tokens[0], tokens[1]); if err != nil { return err }; target.ProductReceiptBaselineMS = value
+		value, err := parseInt(tokens[0], tokens[1])
+		if err != nil {
+			return err
+		}
+		target.ProductReceiptBaselineMS = value
 	case "product_receipt_candidate_wall_ms":
-		value, err := parseInt(tokens[0], tokens[1]); if err != nil { return err }; target.ProductReceiptCandidateMS = value
+		value, err := parseInt(tokens[0], tokens[1])
+		if err != nil {
+			return err
+		}
+		target.ProductReceiptCandidateMS = value
 	case "decision":
 		target.Decision = V2Decision(tokens[1])
 	case "reason":
@@ -215,9 +227,17 @@ func parseV2OptionalField(target *V2OptionalObservation, tokens []string, lineNu
 	case "acceptance":
 		target.Acceptance = tokens[1]
 	case "required_gate":
-		value, err := strconv.ParseBool(tokens[1]); if err != nil { return fmt.Errorf("source line %d: malformed required_gate: %w", lineNumber, err) }; target.RequiredGate = value
+		value, err := strconv.ParseBool(tokens[1])
+		if err != nil {
+			return fmt.Errorf("source line %d: malformed required_gate: %w", lineNumber, err)
+		}
+		target.RequiredGate = value
 	case "immutable_input":
-		value, err := strconv.ParseBool(tokens[1]); if err != nil { return fmt.Errorf("source line %d: malformed immutable_input: %w", lineNumber, err) }; target.ImmutableInput = value
+		value, err := strconv.ParseBool(tokens[1])
+		if err != nil {
+			return fmt.Errorf("source line %d: malformed immutable_input: %w", lineNumber, err)
+		}
+		target.ImmutableInput = value
 	default:
 		return fmt.Errorf("source line %d: unknown optional observation field %q", lineNumber, tokens[0])
 	}
@@ -236,31 +256,65 @@ func validateV2Measurement(value V2MeasurementSpec, lineNumber int) error {
 		"scope": value.Scope, "direction": value.Direction, "nullable_policy": value.NullablePolicy,
 	}
 	for name, item := range checks {
-		if item == "" { missing = append(missing, name) }
+		if item == "" {
+			missing = append(missing, name)
+		}
 	}
-	if len(value.CoveredOperations) == 0 { missing = append(missing, "covered_operations") }
-	if len(value.ExpectedChildProcesses) == 0 && value.ChildProcessCoverage != "none" { missing = append(missing, "expected_child_processes") }
-	if len(value.IdentityDigests) == 0 { missing = append(missing, "identity_digests") }
-	if value.ResolutionMS <= 0 { missing = append(missing, "resolution_ms>0") }
-	if !isValidDigest(value.InputReceiptDigest) { missing = append(missing, "input_receipt_digest=sha256:<64 lowercase hex>") }
-	if !isValidDigest(value.OutputReceiptDigest) { missing = append(missing, "output_receipt_digest=sha256:<64 lowercase hex>") }
+	if len(value.CoveredOperations) == 0 {
+		missing = append(missing, "covered_operations")
+	}
+	if len(value.ExpectedChildProcesses) == 0 && value.ChildProcessCoverage != "none" {
+		missing = append(missing, "expected_child_processes")
+	}
+	if len(value.IdentityDigests) == 0 {
+		missing = append(missing, "identity_digests")
+	}
+	if value.ResolutionMS <= 0 {
+		missing = append(missing, "resolution_ms>0")
+	}
+	if !isValidDigest(value.InputReceiptDigest) {
+		missing = append(missing, "input_receipt_digest=sha256:<64 lowercase hex>")
+	}
+	if !isValidDigest(value.OutputReceiptDigest) {
+		missing = append(missing, "output_receipt_digest=sha256:<64 lowercase hex>")
+	}
 	if len(value.ConflictPrecedence) != 3 || value.ConflictPrecedence[0] != V2Refuted || value.ConflictPrecedence[1] != V2Unknown || value.ConflictPrecedence[2] != V2Closed {
 		missing = append(missing, "conflict_precedence=REFUTED>UNKNOWN>CLOSED")
 	}
-	if len(missing) > 0 { return fmt.Errorf("source line %d: v2 measurement %q missing %s", lineNumber, value.MeasurementID, strings.Join(missing, ", ")) }
+	if len(missing) > 0 {
+		return fmt.Errorf("source line %d: v2 measurement %q missing %s", lineNumber, value.MeasurementID, strings.Join(missing, ", "))
+	}
 	return nil
 }
 
 func validateV2OptionalObservation(value V2OptionalObservation, lineNumber int) error {
 	missing := make([]string, 0)
-	if value.Source == "" { missing = append(missing, "source") }
-	if value.StageID == "" { missing = append(missing, "stage_id") }
-	if value.Step == "" { missing = append(missing, "step") }
-	if value.Decision != V2Unknown { missing = append(missing, "decision=UNKNOWN") }
-	if value.Reason == "" { missing = append(missing, "reason") }
-	if value.Acceptance != "optional" { missing = append(missing, "acceptance=optional") }
-	if !value.ImmutableInput { missing = append(missing, "immutable_input=true") }
-	if value.RequiredGate { missing = append(missing, "required_gate=false") }
-	if len(missing) > 0 { return fmt.Errorf("source line %d: optional observation %q missing %s", lineNumber, value.ObservationID, strings.Join(missing, ", ")) }
+	if value.Source == "" {
+		missing = append(missing, "source")
+	}
+	if value.StageID == "" {
+		missing = append(missing, "stage_id")
+	}
+	if value.Step == "" {
+		missing = append(missing, "step")
+	}
+	if value.Decision != V2Unknown {
+		missing = append(missing, "decision=UNKNOWN")
+	}
+	if value.Reason == "" {
+		missing = append(missing, "reason")
+	}
+	if value.Acceptance != "optional" {
+		missing = append(missing, "acceptance=optional")
+	}
+	if !value.ImmutableInput {
+		missing = append(missing, "immutable_input=true")
+	}
+	if value.RequiredGate {
+		missing = append(missing, "required_gate=false")
+	}
+	if len(missing) > 0 {
+		return fmt.Errorf("source line %d: optional observation %q missing %s", lineNumber, value.ObservationID, strings.Join(missing, ", "))
+	}
 	return nil
 }
