@@ -186,8 +186,12 @@ func compileV2(args []string) error {
 	flags := flag.NewFlagSet("v2-compile", flag.ContinueOnError)
 	source := flags.String("source", "", "input v2 .gooo file")
 	out := flags.String("out", "", "caller-owned output directory")
-	if err := flags.Parse(args); err != nil { return err }
-	if *source == "" || *out == "" { return fmt.Errorf("source and out are required") }
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if *source == "" || *out == "" {
+		return fmt.Errorf("source and out are required")
+	}
 	_, err := projector.CompileV2(*source, *out)
 	return err
 }
@@ -197,10 +201,16 @@ func collectV2(args []string) error {
 	irPath := flags.String("ir", "", "v2 semantic-ir.json")
 	fixture := flags.String("fixture", "", "v2 deterministic fixture")
 	out := flags.String("out", "", "caller-owned output directory")
-	if err := flags.Parse(args); err != nil { return err }
-	if *irPath == "" || *fixture == "" || *out == "" { return fmt.Errorf("ir, fixture, and out are required") }
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if *irPath == "" || *fixture == "" || *out == "" {
+		return fmt.Errorf("ir, fixture, and out are required")
+	}
 	var ir projector.V2SemanticIR
-	if err := projector.LoadJSON(*irPath, &ir); err != nil { return err }
+	if err := projector.LoadJSON(*irPath, &ir); err != nil {
+		return err
+	}
 	_, _, err := projector.CollectV2Fixture(ir, *fixture, *out)
 	return err
 }
@@ -210,12 +220,20 @@ func evaluateV2(args []string) error {
 	irPath := flags.String("ir", "", "v2 semantic-ir.json")
 	collectionPath := flags.String("collection", "", "v2 collection.json")
 	out := flags.String("out", "", "v2 evaluation.json")
-	if err := flags.Parse(args); err != nil { return err }
-	if *irPath == "" || *collectionPath == "" || *out == "" { return fmt.Errorf("ir, collection, and out are required") }
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if *irPath == "" || *collectionPath == "" || *out == "" {
+		return fmt.Errorf("ir, collection, and out are required")
+	}
 	var ir projector.V2SemanticIR
-	if err := projector.LoadJSON(*irPath, &ir); err != nil { return err }
+	if err := projector.LoadJSON(*irPath, &ir); err != nil {
+		return err
+	}
 	var collection projector.V2Collection
-	if err := projector.LoadJSON(*collectionPath, &collection); err != nil { return err }
+	if err := projector.LoadJSON(*collectionPath, &collection); err != nil {
+		return err
+	}
 	_, err := projector.EvaluateV2(ir, collection, *out)
 	return err
 }
@@ -224,10 +242,16 @@ func reportV2(args []string) error {
 	flags := flag.NewFlagSet("v2-report", flag.ContinueOnError)
 	evaluationPath := flags.String("evaluation", "", "v2 evaluation.json")
 	out := flags.String("out", "", "v2 human-report.md")
-	if err := flags.Parse(args); err != nil { return err }
-	if *evaluationPath == "" || *out == "" { return fmt.Errorf("evaluation and out are required") }
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if *evaluationPath == "" || *out == "" {
+		return fmt.Errorf("evaluation and out are required")
+	}
 	var evaluation projector.V2Evaluation
-	if err := projector.LoadJSON(*evaluationPath, &evaluation); err != nil { return err }
+	if err := projector.LoadJSON(*evaluationPath, &evaluation); err != nil {
+		return err
+	}
 	return projector.WriteText(*out, projector.RenderV2HumanReport(evaluation))
 }
 
@@ -236,8 +260,12 @@ func conformanceV2(args []string) error {
 	source := flags.String("source", "examples/measurement-boundary-v2.gooo", "input v2 .gooo file")
 	corpus := flags.String("corpus", "fixtures/v2/corpus.json", "v2 canonical fixture corpus")
 	out := flags.String("out", "", "caller-owned output directory")
-	if err := flags.Parse(args); err != nil { return err }
-	if *out == "" { return fmt.Errorf("out is required") }
+	if err := flags.Parse(args); err != nil {
+		return err
+	}
+	if *out == "" {
+		return fmt.Errorf("out is required")
+	}
 	_, err := projector.RunV2Conformance(*source, *corpus, *out)
 	return err
 }
