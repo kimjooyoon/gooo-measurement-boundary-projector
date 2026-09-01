@@ -1,4 +1,4 @@
-name: measurement-boundary-ci
+name: Measurement Boundary CI
 
 on:
   pull_request:
@@ -13,14 +13,10 @@ jobs:
   validation:
     name: Go 1.27 measurement boundary validation
     runs-on: ubuntu-latest
-    env:
-      SUBJECT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-      WORK_ROOT: ${{ runner.temp }}/gooo-measurement-boundary-projector
     steps:
       - name: Check out subject
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.SUBJECT_SHA }}
           fetch-depth: 0
 
       - name: Install Go 1.27
@@ -49,6 +45,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
+          echo "WORK_ROOT=$RUNNER_TEMP/gooo-measurement-boundary-projector" >> "$GITHUB_ENV"
           mkdir -p "$WORK_ROOT/metrics" "$WORK_ROOT/conformance" "$WORK_ROOT/integration" "$WORK_ROOT/evidence"
           echo "METRICS_DIR=$WORK_ROOT/metrics" >> "$GITHUB_ENV"
           echo "CONFORMANCE_OUTPUT=$WORK_ROOT/conformance" >> "$GITHUB_ENV"
