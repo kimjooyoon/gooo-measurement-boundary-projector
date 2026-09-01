@@ -178,9 +178,13 @@ func evaluateV2Metric(spec V2MeasurementSpec, observations []V2CollectedObservat
 		return setV2Unknown(result, spec, "NO_CONSUMER_RECEIPT_REFERENCE", "RECEIPT_REFERENCE_MISSING", "REFERENCE_THE_MEASURED_STAGE_RECEIPT", []string{spec.MeasurementID})
 	}
 	allowedReceipts := map[string]bool{}
-	for _, observation := range observations { allowedReceipts[observation.ReceiptDigest] = true }
+	for _, observation := range observations {
+		allowedReceipts[observation.ReceiptDigest] = true
+	}
 	for _, consumer := range collection.Consumers {
-		if consumer.MetricID != spec.MeasurementID { continue }
+		if consumer.MetricID != spec.MeasurementID {
+			continue
+		}
 		if !allowedReceipts[consumer.ReceiptDigest] || consumer.StageID != spec.StageID || !v2ExactStrings(consumer.CoveredOperations, spec.CoveredOperations) {
 			return setV2Refuted(result, spec, "RECEIPT_CHAIN_BREAK", "RESTORE_CONSUMER_STAGE_RECEIPT_REFERENCE", []string{consumer.Name})
 		}
@@ -201,7 +205,11 @@ func evaluateV2Metric(spec V2MeasurementSpec, observations []V2CollectedObservat
 		return setV2Unknown(result, spec, "BEFORE_AFTER_PAIR_NOT_EXACT", "PAIR_NOT_EXACT", "PROVIDE_EXACT_BEFORE_AFTER_IDENTITY_PAIR", []string{spec.MeasurementID})
 	}
 	var before, after *int64
-	if observations[0].Phase == "before" { before, after = observations[0].Value, observations[1].Value } else { before, after = observations[1].Value, observations[0].Value }
+	if observations[0].Phase == "before" {
+		before, after = observations[0].Value, observations[1].Value
+	} else {
+		before, after = observations[1].Value, observations[0].Value
+	}
 	delta := *after - *before
 	result.Value = nil
 	result.Improvement = V2Improvement{State: V2Closed, Reason: "EXACT_BEFORE_AFTER_IDENTITY_PAIR", PairID: observations[0].PairID, Before: before, After: after, Delta: &delta}
@@ -209,31 +217,45 @@ func evaluateV2Metric(spec V2MeasurementSpec, observations []V2CollectedObservat
 }
 
 func v2ReceiptProblem(observation V2CollectedObservation, collection V2Collection) string {
-	if !isValidDigest(observation.ReceiptDigest) { return "RECEIPT_CHAIN_BREAK" }
+	if !isValidDigest(observation.ReceiptDigest) {
+		return "RECEIPT_CHAIN_BREAK"
+	}
 	for _, receipt := range collection.Receipts {
-		if receipt.ReceiptDigest != observation.ReceiptDigest { continue }
+		if receipt.ReceiptDigest != observation.ReceiptDigest {
+			continue
+		}
 		if receipt.Schema != V2ReceiptSchema || receipt.MetricID != observation.MetricID || receipt.StageID != observation.StageID || receipt.Stage != observation.Stage || receipt.Step != observation.Step || receipt.CausalEvents != (V2CausalEvents{Start: observation.StartEvent, End: observation.EndEvent}) || receipt.EndObserved != observation.EndObserved || receipt.StageEntered != observation.StageEntered || !v2ExactStrings(receipt.CoveredOperations, observation.CoveredOperations) || !v2ExactStrings(receipt.CoveredChildProcesses, observation.CoveredChildProcesses) || receipt.ChildProcessCoverage != observation.ChildProcessCoverage || receipt.Clock != observation.Clock || receipt.ResolutionMS != observation.ResolutionMS || receipt.RSSProcessTreeScope != observation.RSSProcessTreeScope || receipt.InputReceiptDigest != observation.InputReceiptDigest || receipt.OutputReceiptDigest != observation.OutputReceiptDigest || receipt.Unit != observation.Unit || receipt.Scope != observation.Scope || receipt.SourceAuthority != observation.SourceAuthority || !mapsEqual(receipt.IdentityDigests, observation.IdentityDigests) || receipt.SourceArtifact != observation.SourceArtifact || receipt.Measured != observation.Measured || !equalInt64(receipt.Value, observation.Value) || !equalInt64(receipt.WorkUnits, observation.WorkUnits) || !equalInt64(receipt.PeakRSSKiB, observation.PeakRSSKiB) || receipt.ObservationMethod != observation.ObservationMethod || receipt.Direction != observation.Direction || receipt.ExternalUtilityEvidence != observation.ExternalUtilityEvidence || receipt.OutputInsideReadOnlyInput != observation.OutputInsideReadOnlyInput || receipt.AuthorityEscalation != observation.AuthorityEscalation || receipt.Phase != observation.Phase || receipt.PairID != observation.PairID || receipt.ScenarioID != observation.ScenarioID || receipt.InputDigest != observation.InputDigest || receipt.ContractDigest != observation.ContractDigest || receipt.FixtureDigest != observation.FixtureDigest || receipt.Toolchain != observation.Toolchain || receipt.Runner != observation.Runner || receipt.Job != observation.Job {
 			return "RECEIPT_CHAIN_BREAK"
 		}
-		if !isValidDigest(receipt.ObservationDigest) || receipt.ObservationDigest != receipt.ReceiptDigest { return "RECEIPT_CHAIN_BREAK" }
+		if !isValidDigest(receipt.ObservationDigest) || receipt.ObservationDigest != receipt.ReceiptDigest {
+			return "RECEIPT_CHAIN_BREAK"
+		}
 		return ""
 	}
 	return "RECEIPT_CHAIN_BREAK"
 }
 
 func equalInt64(left, right *int64) bool {
-	if left == nil || right == nil { return left == nil && right == nil }
+	if left == nil || right == nil {
+		return left == nil && right == nil
+	}
 	return *left == *right
 }
 
 func v2ConsumerNames(observation V2CollectedObservation) []string {
-	if len(observation.ConsumerArtifacts) > 0 { return append([]string(nil), observation.ConsumerArtifacts...) }
+	if len(observation.ConsumerArtifacts) > 0 {
+		return append([]string(nil), observation.ConsumerArtifacts...)
+	}
 	return []string{observation.SourceArtifact}
 }
 
 func hasV2ExcludedOperation(spec V2MeasurementSpec, observation V2CollectedObservation) bool {
 	for _, observed := range observation.CoveredOperations {
-		for _, excluded := range spec.ExcludedOperations { if observed == excluded { return true } }
+		for _, excluded := range spec.ExcludedOperations {
+			if observed == excluded {
+				return true
+			}
+		}
 	}
 	return false
 }
@@ -263,7 +285,9 @@ func setV2Refuted(result V2MetricResult, spec V2MeasurementSpec, reason, next st
 func buildV2Claim(decision V2Decision, results []V2MetricResult) V2Claim {
 	ordered := append([]V2MetricResult(nil), results...)
 	sort.SliceStable(ordered, func(i, j int) bool { return v2DecisionRank(ordered[i].State) < v2DecisionRank(ordered[j].State) })
-	if len(ordered) == 0 { return V2Claim{State: V2Unknown, Reason: "NO_DECLARED_MEASUREMENTS", UnknownClass: "EMPTY_IR", NextOperation: "DECLARE_MEASUREMENT", BlockedBy: []string{}} }
+	if len(ordered) == 0 {
+		return V2Claim{State: V2Unknown, Reason: "NO_DECLARED_MEASUREMENTS", UnknownClass: "EMPTY_IR", NextOperation: "DECLARE_MEASUREMENT", BlockedBy: []string{}}
+	}
 	selected := ordered[0]
 	claim := V2Claim{State: decision, StageID: selected.StageID, Stage: selected.Stage, Step: selected.Step, Reason: selected.Reason, BlockedBy: []string{}}
 	if selected.Unknown != nil {
@@ -271,10 +295,19 @@ func buildV2Claim(decision V2Decision, results []V2MetricResult) V2Claim {
 		claim.NextOperation = selected.Unknown.NextOperation
 		claim.BlockedBy = selected.Unknown.BlockedBy
 	}
-	if decision == V2Closed { claim.NextOperation = "NONE" }
+	if decision == V2Closed {
+		claim.NextOperation = "NONE"
+	}
 	return claim
 }
 
 func v2DecisionRank(decision V2Decision) int {
-	switch decision { case V2Refuted: return 0; case V2Unknown: return 1; default: return 2 }
+	switch decision {
+	case V2Refuted:
+		return 0
+	case V2Unknown:
+		return 1
+	default:
+		return 2
+	}
 }
