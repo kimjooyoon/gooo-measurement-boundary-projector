@@ -58,3 +58,7 @@ jobs:
       - name: Measure Go tests
         shell: bash
         run: bash scripts/measure-stage.sh test "$METRICS_DIR/test.json" bash -c 'set -o pipefail; go test -json ./... | tee "$WORK_ROOT/go-test-events.jsonl"'
+
+      - name: Measure canonical conformance
+        shell: bash
+        run: bash scripts/measure-stage.sh conformance "$METRICS_DIR/conformance.json" bash scripts/conformance.sh "$WORK_ROOT/measurement-boundary-projector"
