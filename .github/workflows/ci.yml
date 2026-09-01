@@ -45,7 +45,8 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          echo "WORK_ROOT=$RUNNER_TEMP/gooo-measurement-boundary-projector" >> "$GITHUB_ENV"
+          WORK_ROOT="$RUNNER_TEMP/gooo-measurement-boundary-projector"
+          echo "WORK_ROOT=$WORK_ROOT" >> "$GITHUB_ENV"
           mkdir -p "$WORK_ROOT/metrics" "$WORK_ROOT/conformance" "$WORK_ROOT/integration" "$WORK_ROOT/evidence"
           echo "METRICS_DIR=$WORK_ROOT/metrics" >> "$GITHUB_ENV"
           echo "CONFORMANCE_OUTPUT=$WORK_ROOT/conformance" >> "$GITHUB_ENV"
