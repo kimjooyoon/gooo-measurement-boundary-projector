@@ -8,21 +8,35 @@ import (
 )
 
 func CompileV2(sourcePath, outputDir string) (V2SemanticIR, error) {
-	if err := requireOutputOutside(outputDir, filepath.Dir(sourcePath)); err != nil { return V2SemanticIR{}, err }
+	if err := requireOutputOutside(outputDir, filepath.Dir(sourcePath)); err != nil {
+		return V2SemanticIR{}, err
+	}
 	ir, err := ParseV2Source(sourcePath)
-	if err != nil { return V2SemanticIR{}, err }
-	if err := WriteJSON(filepath.Join(outputDir, "semantic-ir.json"), ir); err != nil { return V2SemanticIR{}, err }
+	if err != nil {
+		return V2SemanticIR{}, err
+	}
+	if err := WriteJSON(filepath.Join(outputDir, "semantic-ir.json"), ir); err != nil {
+		return V2SemanticIR{}, err
+	}
 	collector, err := renderGeneratedV2Collector(ir)
-	if err != nil { return V2SemanticIR{}, err }
-	if err := WriteText(filepath.Join(outputDir, "generated", "collector.go"), collector); err != nil { return V2SemanticIR{}, err }
+	if err != nil {
+		return V2SemanticIR{}, err
+	}
+	if err := WriteText(filepath.Join(outputDir, "generated", "collector.go"), collector); err != nil {
+		return V2SemanticIR{}, err
+	}
 	wrapper := "#!/usr/bin/env bash\nset -Eeuo pipefail\nfixture=${1:?fixture path is required}\nout=${2:?output directory is required}\nexec go run \"$(dirname \"$0\")/collector.go\" --fixture \"$fixture\" --out \"$out\"\n"
-	if err := WriteText(filepath.Join(outputDir, "generated", "collect.sh"), wrapper); err != nil { return V2SemanticIR{}, err }
+	if err := WriteText(filepath.Join(outputDir, "generated", "collect.sh"), wrapper); err != nil {
+		return V2SemanticIR{}, err
+	}
 	return ir, nil
 }
 
 func renderGeneratedV2Collector(ir V2SemanticIR) (string, error) {
 	data, err := json.Marshal(ir)
-	if err != nil { return "", err }
+	if err != nil {
+		return "", err
+	}
 	template := `package main
 
 import (
