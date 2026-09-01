@@ -82,10 +82,15 @@ jobs:
           set -Eeuo pipefail
           jq -e '
             .workflow == "GitHub Actions" and
-            .conformance.total == 11 and .conformance.selected == 11 and .conformance.executed == 11 and .conformance.reused == 0 and .conformance.closed == 3 and .conformance.unknown == 5 and .conformance.refuted == 3 and
+            .conformance.total == 10 and .conformance.selected == 10 and .conformance.executed == 10 and .conformance.reused == 0 and .conformance.closed == 3 and .conformance.unknown == 4 and .conformance.refuted == 3 and
             .runtime_authority == {repository_writes:0,apply_authority:0,commit_authority:0,merge_authority:0,tag_authority:0,release_authority:0,cross_project_required_gates:0} and
             .input_repo.read_only == true and .input_repo.output_scope == "caller-owned-temp-output-only" and
-            .local_validation_commands == [] and .OPERATIONAL_REFUTED.preserved == true and
+            .local_validation_commands == [] and .pr_first_conformance == "REFUTED" and
+            .OPERATIONAL_REFUTED.exact_count == 1 and .OPERATIONAL_REFUTED.stage == "AUTHORING" and
+            .OPERATIONAL_REFUTED.step == "OPEN_IMPLEMENTATION_PR_BEFORE_MAIN_INTEGRATION" and
+            .OPERATIONAL_REFUTED.reason == "INITIAL_IMPLEMENTATION_PUSH_PRECEDED_PR" and
+            .OPERATIONAL_REFUTED.initial_main_sha == "8c63fb3abb6f6026bbf274bc6b938c54b4fca3de" and
+            .OPERATIONAL_REFUTED.initial_main_run_id == "33540259958" and .OPERATIONAL_REFUTED.preserved == true and
             ([.stage_measurements | to_entries[] | .value.wall_ms] | all(. >= 0)) and
             ([.stage_measurements | to_entries[] | .value.peak_rss_kib] | all(. >= 0)) and
             .inventory.root_readme_excluded == true and .inventory.go_files > 0 and .inventory.gooo_files > 0 and

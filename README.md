@@ -25,3 +25,5 @@ go run ./cmd/measurement-boundary-projector run \
 ```
 
 The local repository is an input only. The project intentionally does not prescribe local validation commands; the evidence record retains `local_validation_commands` and `OPERATIONAL_REFUTED` fields if a prohibited local operation is ever detected.
+
+Operational provenance is separate from product semantics. The initial implementation push preceded a PR, so `pr_first_conformance=REFUTED` and one exact `OPERATIONAL_REFUTED` record are permanently preserved: stage `AUTHORING`, step `OPEN_IMPLEMENTATION_PR_BEFORE_MAIN_INTEGRATION`, reason `INITIAL_IMPLEMENTATION_PUSH_PRECEDED_PR`, initial main SHA `8c63fb3abb6f6026bbf274bc6b938c54b4fca3de`, and initial CI run `33540259958`. The follow-up is a remediation/conformance PR; history is not rewritten.

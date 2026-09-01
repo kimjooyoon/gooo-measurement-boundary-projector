@@ -11,7 +11,7 @@ mkdir -p "$output"
 	--out "$output"
 jq -e '
   .schema == "gooo/measurement-boundary/conformance/v1" and
-  .total == 11 and .selected == 11 and .executed == 11 and .reused == 0 and
-  .closed == 3 and .unknown == 5 and .refuted == 3 and
+  .total == 10 and .selected == 10 and .executed == 10 and .reused == 0 and
+  .closed == 3 and .unknown == 4 and .refuted == 3 and
   ([.tests[] | select(.expected != .observed)] | length) == 0
 ' "$output/conformance-summary.json" >/dev/null

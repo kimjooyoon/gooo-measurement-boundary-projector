@@ -12,5 +12,19 @@
     "tag_authority": 0,
     "release_authority": 0,
     "cross_project_required_gates": 0
+  },
+  "operational_refutation": {
+    "pr_first_conformance": "REFUTED",
+    "OPERATIONAL_REFUTED": {
+      "exact_count": 1,
+      "stage": "AUTHORING",
+      "step": "OPEN_IMPLEMENTATION_PR_BEFORE_MAIN_INTEGRATION",
+      "reason": "INITIAL_IMPLEMENTATION_PUSH_PRECEDED_PR",
+      "initial_main_sha": "8c63fb3abb6f6026bbf274bc6b938c54b4fca3de",
+      "initial_main_run_id": "33540259958",
+      "initial_main_run_url": "https://github.com/kimjooyoon/gooo-measurement-boundary-projector/actions/runs/33540259958",
+      "initial_main_artifact": null,
+      "preserved": true
+    }
   }
 }
