@@ -1,0 +1,6 @@
+{
+  "schema": "gooo/measurement-boundary/fixture/v1",
+  "case_id": "unknown-missing-measurement",
+  "name": "declared metrics were not executed",
+  "samples": []
+}

@@ -1,0 +1,39 @@
+// .gooo is the authoritative measurement boundary view.
+package "measurement_boundary"
+namespace "gooo.measurement.boundary.v1"
+
+measurement "gooo.metric.report.verify.wall.v1" {
+  stage "report"
+  step "report/verify"
+  span "report.start" "verify.end"
+  include "report"
+  include "verify"
+  exclude "release"
+  unit "ms"
+  authority "runtime.json"
+  method "deterministic-fixture"
+  scope "runtime/report-verify"
+  identity "repository" "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  identity "commit" "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  direction "lower_is_better"
+  nullable "null+UNKNOWN"
+  precedence "REFUTED" "UNKNOWN" "CLOSED"
+}
+
+measurement "gooo.metric.report.verify.rss.v1" {
+  stage "report"
+  step "report/verify"
+  span "report.start" "verify.end"
+  include "report"
+  include "verify"
+  exclude "release"
+  unit "KiB"
+  authority "runtime.json"
+  method "deterministic-fixture"
+  scope "runtime/report-verify"
+  identity "repository" "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  identity "commit" "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  direction "lower_is_better"
+  nullable "null+UNKNOWN"
+  precedence "REFUTED" "UNKNOWN" "CLOSED"
+}

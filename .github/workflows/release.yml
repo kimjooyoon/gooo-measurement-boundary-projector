@@ -1,0 +1,112 @@
+name: immutable-measurement-boundary-release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Annotated release tag"
+        required: true
+        default: "v0.1.0"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Draft, audit, and publish immutable release
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - name: Check out annotated tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Install Go 1.27
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.27.0
+          cache: false
+
+      - name: Build release assets from tag
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          case "$RELEASE_TAG" in
+            v0.1.0) ;;
+            *) echo "unsupported release tag $RELEASE_TAG" >&2; exit 64 ;;
+          esac
+          test "$(git cat-file -t "$RELEASE_TAG")" = "tag"
+          commit_sha=$(git rev-parse "$RELEASE_TAG^{commit}")
+          tag_object_sha=$(git rev-parse "$RELEASE_TAG")
+          release_root="$RUNNER_TEMP/measurement-boundary-release"
+          mkdir -p "$release_root"
+          go build -trimpath -o "$release_root/measurement-boundary-projector" ./cmd/measurement-boundary-projector
+          archive="gooo-measurement-boundary-projector-${RELEASE_TAG}.tar.gz"
+          git archive --format=tar.gz --prefix="gooo-measurement-boundary-projector-${RELEASE_TAG}/" "$commit_sha" > "$release_root/$archive"
+          asset_digest="sha256:$(sha256sum "$release_root/$archive" | awk '{print $1}')"
+          asset_size=$(wc -c < "$release_root/$archive" | tr -d ' ')
+          printf '%s  %s\n' "$asset_digest" "$archive" > "$release_root/SHA256SUMS"
+          jq -n --arg tag "$RELEASE_TAG" --arg commit "$commit_sha" --arg object "$tag_object_sha" --arg archive "$archive" --arg digest "$asset_digest" --argjson size "$asset_size" '{schema:"gooo/measurement-boundary/release-manifest/v1",tag:$tag,tag_object_sha:$object,commit_sha:$commit,archive:$archive,asset_size_bytes:$size,asset_digest:$digest,self_asserted_immutable:true,external_platform_authority:"github_release_api.immutable"}' > "$release_root/release-manifest.json"
+          manifest_digest="sha256:$(sha256sum "$release_root/release-manifest.json" | awk '{print $1}')"
+          printf '%s  %s\n' "$manifest_digest" release-manifest.json >> "$release_root/SHA256SUMS"
+          echo "RELEASE_ROOT=$release_root" >> "$GITHUB_ENV"
+          echo "ARCHIVE=$archive" >> "$GITHUB_ENV"
+
+      - name: Create or preserve draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "release exists; preserving it for audit"
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft --title "gooo-measurement-boundary-projector $RELEASE_TAG" --notes "Draft-first immutable release bound to annotated tag $(git rev-parse "$RELEASE_TAG^{commit}")." "$RELEASE_ROOT/$ARCHIVE" "$RELEASE_ROOT/SHA256SUMS" "$RELEASE_ROOT/release-manifest.json"
+          fi
+
+      - name: Audit draft assets before publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$RELEASE_TAG" > "$RELEASE_ROOT/release-before-publish.json"
+          jq -e --arg tag "$RELEASE_TAG" '.tag_name == $tag and .draft == true and .prerelease == false' "$RELEASE_ROOT/release-before-publish.json" >/dev/null
+          for asset in "$ARCHIVE" SHA256SUMS release-manifest.json; do
+            jq -e --arg name "$asset" '[.assets[] | select(.name == $name)] | length == 1' "$RELEASE_ROOT/release-before-publish.json" >/dev/null
+          done
+
+      - name: Publish actual immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: gh release edit "$RELEASE_TAG" --draft=false
+
+      - name: Audit immutable release and asset digests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          gh api "repos/${GITHUB_REPOSITORY}/releases/tags/$RELEASE_TAG" > "$RELEASE_ROOT/release-after-publish.json"
+          jq -e --arg tag "$RELEASE_TAG" '.tag_name == $tag and .draft == false and .prerelease == false and .immutable == true' "$RELEASE_ROOT/release-after-publish.json" >/dev/null
+          for asset in "$ARCHIVE" SHA256SUMS release-manifest.json; do
+            curl --fail --location --retry 3 --silent --show-error "https://github.com/${GITHUB_REPOSITORY}/releases/download/$RELEASE_TAG/$asset" --output "$RELEASE_ROOT/audit-$asset"
+            expected=$(jq -r --arg name "$asset" '.assets[] | select(.name == $name) | .digest' "$RELEASE_ROOT/release-after-publish.json")
+            actual="sha256:$(sha256sum "$RELEASE_ROOT/audit-$asset" | awk '{print $1}')"
+            test "$expected" = "$actual"
+          done
+          jq -e --arg tag "$RELEASE_TAG" --arg commit "$(git rev-parse "$RELEASE_TAG^{commit}")" --arg object "$(git rev-parse "$RELEASE_TAG")" '.tag == $tag and .commit_sha == $commit and .tag_object_sha == $object and .self_asserted_immutable == true' "$RELEASE_ROOT/release-manifest.json" >/dev/null
+          cat "$RELEASE_ROOT/release-after-publish.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload release and audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: measurement-boundary-release-${{ env.RELEASE_TAG }}
+          path: ${{ env.RELEASE_ROOT }}
+          if-no-files-found: error

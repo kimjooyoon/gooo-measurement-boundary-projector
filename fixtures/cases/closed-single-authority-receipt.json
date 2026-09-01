@@ -1,0 +1,9 @@
+{
+  "schema": "gooo/measurement-boundary/fixture/v1",
+  "case_id": "closed-single-authority-receipt",
+  "name": "single generated collection shared by runtime and report consumers",
+  "samples": [
+    {"metric_id":"gooo.metric.report.verify.wall.v1","stage":"report","step":"report/verify","start_boundary":"report.start","end_boundary":"verify.end","included_operations":["report","verify"],"unit":"ms","source_authority":"runtime.json","observation_method":"deterministic-fixture","scope":"runtime/report-verify","identity_digests":{"repository":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","commit":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},"direction":"lower_is_better","measured":true,"value":11,"source_artifact":"runtime.json","consumer_artifacts":["runtime.json","report.json"],"external_utility_evidence":false,"tamper_receipt":false,"tamper_consumer":false,"contradiction":false},
+    {"metric_id":"gooo.metric.report.verify.rss.v1","stage":"report","step":"report/verify","start_boundary":"report.start","end_boundary":"verify.end","included_operations":["report","verify"],"unit":"KiB","source_authority":"runtime.json","observation_method":"deterministic-fixture","scope":"runtime/report-verify","identity_digests":{"repository":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","commit":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},"direction":"lower_is_better","measured":true,"value":9748,"source_artifact":"runtime.json","consumer_artifacts":["runtime.json","report.json"],"external_utility_evidence":false,"tamper_receipt":false,"tamper_consumer":false,"contradiction":false}
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "gooo/measurement-boundary/contract/v1",
+  "decision_precedence": ["REFUTED", "UNKNOWN", "CLOSED"],
+  "unknown_fields": ["stage", "step", "reason", "unknown_class", "next_operation", "blocked_by"],
+  "forbidden_projection_fields": ["score", "percentage", "overall_improvement"],
+  "exact_pair_fields": ["before", "after", "delta"],
+  "runtime_authority": {
+    "repository_writes": 0,
+    "apply_authority": 0,
+    "commit_authority": 0,
+    "merge_authority": 0,
+    "tag_authority": 0,
+    "release_authority": 0,
+    "cross_project_required_gates": 0
+  }
+}

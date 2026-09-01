@@ -1,0 +1,16 @@
+{
+  "schema": "gooo/measurement-boundary/corpus/v1",
+  "cases": [
+    {"ordinal":1,"case_id":"closed-single-authority-receipt","path":"cases/closed-single-authority-receipt.json","expected":"CLOSED","description":"single authority and one receipt shared by runtime/report consumers"},
+    {"ordinal":2,"case_id":"closed-explicit-zero","path":"cases/closed-explicit-zero.json","expected":"CLOSED","description":"measured zero is a value"},
+    {"ordinal":3,"case_id":"closed-measured-baseline","path":"cases/closed-measured-baseline.json","expected":"CLOSED","description":"exact measured baseline"},
+    {"ordinal":4,"case_id":"unknown-v048-conflict","path":"cases/unknown-v048-conflict.json","expected":"UNKNOWN","description":"v0.48 11/9748 versus 0/0 conflict"},
+    {"ordinal":5,"case_id":"unknown-scope-mismatch","path":"cases/unknown-scope-mismatch.json","expected":"UNKNOWN","description":"same metric has two scopes"},
+    {"ordinal":6,"case_id":"unknown-unit-mismatch","path":"cases/unknown-unit-mismatch.json","expected":"UNKNOWN","description":"same metric has two units"},
+    {"ordinal":7,"case_id":"unknown-missing-measurement","path":"cases/unknown-missing-measurement.json","expected":"UNKNOWN","description":"declared metric was not executed"},
+    {"ordinal":8,"case_id":"unknown-external-utility","path":"cases/unknown-external-utility.json","expected":"UNKNOWN","description":"external utility evidence is absent"},
+    {"ordinal":9,"case_id":"refuted-tampered-receipt","path":"cases/refuted-tampered-receipt.json","expected":"REFUTED","description":"receipt digest was tampered"},
+    {"ordinal":10,"case_id":"refuted-consumer-receipt","path":"cases/refuted-consumer-receipt.json","expected":"REFUTED","description":"consumer receipt reference was tampered"},
+    {"ordinal":11,"case_id":"refuted-contradiction","path":"cases/refuted-contradiction.json","expected":"REFUTED","description":"contradictory value assertion"}
+  ]
+}
