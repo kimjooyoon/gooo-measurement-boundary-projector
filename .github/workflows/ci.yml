@@ -51,3 +51,10 @@ jobs:
 
       - name: Measure compile
         run: bash scripts/measure-stage.sh compile "$METRICS_DIR/compile.json" go build -buildmode=archive -trimpath -o "$WORK_ROOT/measurement-boundary-compile.a" ./internal/projector
+
+      - name: Measure build
+        run: bash scripts/measure-stage.sh build "$METRICS_DIR/build.json" go build -trimpath -o "$WORK_ROOT/measurement-boundary-projector" ./cmd/measurement-boundary-projector
+
+      - name: Measure Go tests
+        shell: bash
+        run: bash scripts/measure-stage.sh test "$METRICS_DIR/test.json" bash -c 'set -o pipefail; go test -json ./... | tee "$WORK_ROOT/go-test-events.jsonl"'
