@@ -30,7 +30,9 @@ jobs:
           set -Eeuo pipefail
           files=$(gofmt -l $(git ls-files '*.go'))
           if [ -n "$files" ]; then
-            printf '%s\n' "$files"
+            for file in $files; do
+              gofmt -d "$file"
+            done
             exit 1
           fi
       - name: Verify static analysis in CI
