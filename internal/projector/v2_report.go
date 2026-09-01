@@ -55,6 +55,8 @@ func RenderV2HumanReport(evaluation V2Evaluation) string {
 }
 
 func displayV2Int(value *int64) string {
-	if value == nil { return "null" }
+	if value == nil {
+		return "null"
+	}
 	return fmt.Sprintf("%d", *value)
 }
