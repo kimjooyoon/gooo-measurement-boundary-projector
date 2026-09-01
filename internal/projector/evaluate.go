@@ -7,7 +7,7 @@ import (
 )
 
 func Evaluate(ir SemanticIR, collection Collection, outputPath string) (Evaluation, error) {
-	if ir.Schema != IRScheme {
+	if ir.Schema != IRSchema {
 		return Evaluation{}, fmt.Errorf("unexpected semantic IR schema %q", ir.Schema)
 	}
 	computedIR, err := digestIR(ir)

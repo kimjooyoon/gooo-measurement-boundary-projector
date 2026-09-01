@@ -30,7 +30,7 @@ func TestExplicitZeroIsNotMissing(t *testing.T) {
 	}
 	collection := Collection{
 		Collector: CollectorEvidence{Generated: true, MeasuredOnce: true},
-		Receipts: []Receipt{{Schema: ReceiptSchema, MetricID: "m", Stage: "report", Step: "verify", Unit: "count", Scope: "exact", SourceAuthority: "runtime.json", IdentityDigests: map[string]string{"fixture": "sha256:x"}, SourceArtifact: "runtime.json", Measured: true, Value: &zero, ObservationDigest: observation.ReceiptDigest, ReceiptDigest: observation.ReceiptDigest}},
+		Receipts:  []Receipt{{Schema: ReceiptSchema, MetricID: "m", Stage: "report", Step: "verify", Unit: "count", Scope: "exact", SourceAuthority: "runtime.json", IdentityDigests: map[string]string{"fixture": "sha256:x"}, SourceArtifact: "runtime.json", Measured: true, Value: &zero, ObservationDigest: observation.ReceiptDigest, ReceiptDigest: observation.ReceiptDigest}},
 	}
 	result := evaluateMetric(spec, []CollectedObservation{observation}, collection)
 	if result.State != Closed || result.Value == nil || *result.Value != 0 {

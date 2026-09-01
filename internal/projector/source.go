@@ -74,7 +74,7 @@ func ParseSource(path string) (SemanticIR, error) {
 	if packageName == "" || namespace == "" || len(measurements) == 0 {
 		return SemanticIR{}, fmt.Errorf("source must declare package, namespace, and at least one measurement")
 	}
-	ir := SemanticIR{Schema: IRScheme, SourcePath: filepath.ToSlash(path), SourceDigest: digest, Measurements: measurements}
+	ir := SemanticIR{Schema: IRSchema, SourcePath: filepath.ToSlash(path), SourceDigest: digest, Measurements: measurements}
 	ir.Digest, err = digestIR(ir)
 	if err != nil {
 		return SemanticIR{}, err

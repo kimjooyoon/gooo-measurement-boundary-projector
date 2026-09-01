@@ -3,7 +3,6 @@ package projector
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -68,8 +67,8 @@ func CollectFixture(ir SemanticIR, fixturePath, outputDir string) (Collection, F
 		return Collection{}, Fixture{}, err
 	}
 	collection := Collection{
-		Schema: CollectionSchema,
-		IRDigest: ir.Digest,
+		Schema:        CollectionSchema,
+		IRDigest:      ir.Digest,
 		FixtureDigest: fixtureDigest,
 		Collector: CollectorEvidence{
 			Kind: "generated-collector", Generated: true, MeasuredOnce: measuredOnce,
@@ -78,8 +77,8 @@ func CollectFixture(ir SemanticIR, fixturePath, outputDir string) (Collection, F
 			MergeAuthority: 0, TagAuthority: 0, ReleaseAuthority: 0,
 		},
 		Observations: make([]CollectedObservation, 0, len(fixture.Samples)),
-		Receipts: make([]Receipt, 0, len(fixture.Samples)),
-		Consumers: make([]ConsumerArtifact, 0),
+		Receipts:     make([]Receipt, 0, len(fixture.Samples)),
+		Consumers:    make([]ConsumerArtifact, 0),
 	}
 	for _, sample := range fixture.Samples {
 		payload := measurementPayload{
