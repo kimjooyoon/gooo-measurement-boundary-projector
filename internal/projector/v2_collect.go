@@ -121,7 +121,7 @@ func CollectV2Fixture(ir V2SemanticIR, fixturePath, outputDir string) (V2Collect
 			OperatorAuthority: "authoring-only", RuntimeAuthority: fixture.RuntimeAuthority,
 		},
 		Observations: make([]V2CollectedObservation, 0, len(fixture.Samples)),
-		Receipts: make([]V2Receipt, 0, len(fixture.Samples)), Consumers: make([]V2ConsumerArtifact, 0),
+		Receipts:     make([]V2Receipt, 0, len(fixture.Samples)), Consumers: make([]V2ConsumerArtifact, 0),
 	}
 	for _, sample := range fixture.Samples {
 		payload := v2Payload(sample)
@@ -144,7 +144,7 @@ func CollectV2Fixture(ir V2SemanticIR, fixturePath, outputDir string) (V2Collect
 			IdentityDigests: sample.IdentityDigests, SourceArtifact: sample.SourceArtifact, Measured: sample.Measured,
 			Value: sample.Value, WorkUnits: sample.WorkUnits, PeakRSSKiB: sample.PeakRSSKiB,
 			ObservationMethod: sample.ObservationMethod, Direction: sample.Direction,
-			ExternalUtilityEvidence: sample.ExternalUtilityEvidence,
+			ExternalUtilityEvidence:   sample.ExternalUtilityEvidence,
 			OutputInsideReadOnlyInput: sample.OutputInsideReadOnlyInput, AuthorityEscalation: sample.AuthorityEscalation,
 			ScenarioID: sample.ScenarioID, InputDigest: sample.InputDigest, ContractDigest: sample.ContractDigest,
 			FixtureDigest: sample.FixtureDigest, Toolchain: sample.Toolchain, Runner: sample.Runner, Job: sample.Job,
@@ -162,7 +162,7 @@ func CollectV2Fixture(ir V2SemanticIR, fixturePath, outputDir string) (V2Collect
 			Scope: sample.Scope, IdentityDigests: sample.IdentityDigests, Direction: sample.Direction,
 			Measured: sample.Measured, Value: sample.Value, WorkUnits: sample.WorkUnits, PeakRSSKiB: sample.PeakRSSKiB,
 			SourceArtifact: sample.SourceArtifact, ConsumerArtifacts: sample.ConsumerArtifacts,
-			ExternalUtilityEvidence: sample.ExternalUtilityEvidence,
+			ExternalUtilityEvidence:   sample.ExternalUtilityEvidence,
 			OutputInsideReadOnlyInput: sample.OutputInsideReadOnlyInput, AuthorityEscalation: sample.AuthorityEscalation,
 			Phase: sample.Phase, PairID: sample.PairID, ScenarioID: sample.ScenarioID, InputDigest: sample.InputDigest,
 			ContractDigest: sample.ContractDigest, FixtureDigest: sample.FixtureDigest, Toolchain: sample.Toolchain,
@@ -201,6 +201,8 @@ func CollectV2Fixture(ir V2SemanticIR, fixturePath, outputDir string) (V2Collect
 
 func stringsRepeat(value string, count int) string {
 	result := ""
-	for index := 0; index < count; index++ { result += value }
+	for index := 0; index < count; index++ {
+		result += value
+	}
 	return result
 }
