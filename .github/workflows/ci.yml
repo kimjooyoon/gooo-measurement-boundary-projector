@@ -66,3 +66,9 @@ jobs:
       - name: Measure generated collector integration
         shell: bash
         run: bash scripts/measure-stage.sh integration "$METRICS_DIR/integration.json" bash scripts/integration.sh "$WORK_ROOT/measurement-boundary-projector"
+
+      - name: Inventory source and generated artifacts
+        run: "$WORK_ROOT/measurement-boundary-projector" inventory --root "$GITHUB_WORKSPACE" --generated-root "$WORK_ROOT/conformance" --out "$EVIDENCE_DIR/inventory.json"
+
+      - name: Assemble machine evidence
+        run: bash scripts/assemble-evidence.sh "$METRICS_DIR" "$WORK_ROOT/go-test-events.jsonl" "$CONFORMANCE_OUTPUT" "$INTEGRATION_OUTPUT" "$EVIDENCE_DIR/inventory.json" "$EVIDENCE_DIR/ci-evidence.json"
