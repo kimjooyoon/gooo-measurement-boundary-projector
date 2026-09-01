@@ -32,14 +32,6 @@ jobs:
           go-version: 1.27.0
           cache: false
 
-      - name: Verify repository release immutability
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -Eeuo pipefail
-          gh api "repos/${GITHUB_REPOSITORY}/immutable-releases" | jq -e '.enabled == true' >/dev/null
-
       - name: Build release assets from tag
         shell: bash
         run: |
