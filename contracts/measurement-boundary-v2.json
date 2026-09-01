@@ -1,0 +1,77 @@
+{
+  "schema": "gooo/measurement-boundary/contract/v2",
+  "authority": ".gooo owns semantics, activity boundaries, decisions, and indicator projections; Go owns generation, evaluation, and runtime receipt collection",
+  "decision_precedence": ["REFUTED", "UNKNOWN", "CLOSED"],
+  "unknown_fields": ["stage", "step", "reason", "unknown_class", "next_operation", "blocked_by"],
+  "required_stage_fields": [
+    "stage_id", "start_event", "end_event", "covered_operations", "child_process_coverage",
+    "clock", "resolution_ms", "rss_process_tree_scope", "input_receipt_digest", "output_receipt_digest"
+  ],
+  "closed_rules": [
+    "single declared stage has exact causal start/end coverage",
+    "covered operations and nested child-process coverage match exactly",
+    "clock and resolution evidence are present",
+    "RSS scope is the declared process tree",
+    "input and output receipt digests match the declaration and receipt chain",
+    "zero-work with zero-duration is a measured CLOSED value",
+    "an exact same-scope before/after pair is a CLOSED per-indicator improvement"
+  ],
+  "unknown_rules": [
+    "stage not entered",
+    "end event missing",
+    "positive work_units with wall_ms zero at the declared resolution",
+    "competing collector authority",
+    "missing resolution or process-tree scope evidence",
+    "missing values remain null plus the six-field UNKNOWN frontier"
+  ],
+  "refuted_rules": [
+    "forged stage identity",
+    "receipt chain break",
+    "output inside read-only input",
+    "runtime or operator authority escalation"
+  ],
+  "improvement_pair_identity": ["scenario_id", "input_digest", "contract_digest", "fixture_digest", "toolchain", "runner", "job", "pair_id", "phase"],
+  "forbidden_projection_fields": ["score", "percentage", "average", "overall_improvement", "unscoped_aggregate"],
+  "runtime_authority": {
+    "repository_writes": 0,
+    "apply_authority": 0,
+    "commit_authority": 0,
+    "merge_authority": 0,
+    "tag_authority": 0,
+    "release_authority": 0,
+    "local_test_executions": 0,
+    "cross_project_required_gates": 0,
+    "operator_authority": "authoring-only"
+  },
+  "denominator": {
+    "total": 12,
+    "CLOSED": 4,
+    "UNKNOWN": 4,
+    "REFUTED": 4,
+    "integer_vectors_only": true
+  },
+  "cases": {
+    "CLOSED": ["closed-single-stage-exact-coverage", "closed-nested-child-coverage", "closed-same-scope-matched-pair", "closed-zero-work-zero-duration"],
+    "UNKNOWN": ["unknown-stage-not-entered", "unknown-end-event-missing", "unknown-positive-work-below-resolution", "unknown-competing-collector-authority"],
+    "REFUTED": ["refuted-forged-stage-id", "refuted-receipt-chain-break", "refuted-output-inside-read-only-input", "refuted-authority-escalation"]
+  },
+  "optional_inputs": [
+    {
+      "id": "shared-ledger-v0.49-main-lock",
+      "source": "shared-ledger-v0.49",
+      "actual_main_lock_wall_ms": 168000,
+      "product_receipt_baseline_wall_ms": 0,
+      "product_receipt_candidate_wall_ms": 0,
+      "decision": "UNKNOWN",
+      "reason": "MEASUREMENT_SCOPE_MISMATCH",
+      "required_gate": false,
+      "immutable_input": true
+    }
+  ],
+  "history": {
+    "v1_contract_preserved": true,
+    "v1_denominator": {"total": 10, "CLOSED": 3, "UNKNOWN": 4, "REFUTED": 3},
+    "OPERATIONAL_REFUTED": {"exact_count": 1, "preserved": true},
+    "mutable_and_immutable_release_history_preserved": true
+  }
+}

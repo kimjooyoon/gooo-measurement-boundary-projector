@@ -1,0 +1,88 @@
+name: measurement-boundary-v2
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  v2:
+    name: Go 1.27.x v2 contract, conformance, and integration
+    runs-on: ubuntu-latest
+    env:
+      V2_ROOT: ${{ github.workspace }}
+      V2_OUTPUT: ${{ runner.temp }}/gooo-measurement-boundary-v2
+      V2_BIN: ${{ runner.temp }}/gooo-measurement-boundary-v2/projector
+      V2_METRICS: ${{ runner.temp }}/gooo-measurement-boundary-v2/stage-metrics
+    steps:
+      - name: Check out repository input
+        uses: actions/checkout@v4
+
+      - name: Install Go 1.27.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.27.x
+          cache: false
+
+      - name: Build v2 projector in caller-owned output
+        run: |
+          set -Eeuo pipefail
+          mkdir -p "$V2_OUTPUT" "$V2_METRICS"
+          bash scripts/measure-stage.sh build "$V2_METRICS/build.json" go build -trimpath -o "$V2_BIN" ./cmd/measurement-boundary-projector
+
+      - name: Run exact v2 denominator
+        env:
+          V2_CONFORMANCE_OUTPUT: ${{ runner.temp }}/gooo-measurement-boundary-v2/conformance
+        run: |
+          set -Eeuo pipefail
+          bash scripts/measure-stage.sh conformance "$V2_METRICS/conformance.json" bash scripts/v2-conformance.sh "$V2_BIN"
+
+      - name: Run generated collector controlled pair
+        env:
+          V2_INTEGRATION_OUTPUT: ${{ runner.temp }}/gooo-measurement-boundary-v2/integration
+        run: |
+          set -Eeuo pipefail
+          bash scripts/measure-stage.sh integration "$V2_METRICS/integration.json" bash scripts/v2-integration.sh "$V2_BIN"
+
+      - name: Record repository inventory and assemble evidence
+        run: |
+          set -Eeuo pipefail
+          "$V2_BIN" inventory --root "$V2_ROOT" --generated-root "$V2_OUTPUT" --out "$V2_OUTPUT/inventory.json"
+          bash scripts/assemble-v2-evidence.sh \
+            "$V2_OUTPUT/conformance" \
+            "$V2_OUTPUT/integration" \
+            "$V2_METRICS" \
+            "$V2_OUTPUT/inventory.json" \
+            "$V2_OUTPUT/v2-ci-evidence.json"
+
+      - name: Assert contract and release-boundary evidence
+        run: |
+          set -Eeuo pipefail
+          jq -e '
+            .schema == "gooo/measurement-boundary/ci-evidence/v2" and
+            .denominator == {"total":12,"CLOSED":4,"UNKNOWN":4,"REFUTED":4} and
+            .runtime_authority.repository_writes == 0 and
+            .runtime_authority.local_test_executions == 0 and
+            .runtime_authority.cross_project_required_gates == 0 and
+            .input_repo.root_readme_excluded == true and
+            .v1_history.contract_preserved == true and
+            .v1_history.OPERATIONAL_REFUTED.exact_count == 1 and
+            ([.optional_observations[] | select(.actual_main_lock_wall_ms != 168000 or .product_receipt_baseline_wall_ms != 0 or .product_receipt_candidate_wall_ms != 0 or .decision != "UNKNOWN" or .required_gate != false)] | length) == 0 and
+            (.integration.decision == "CLOSED") and (.integration.same_ci_job == true) and
+            (has("score") | not) and (has("percentage") | not) and (has("average") | not)
+          ' "$V2_OUTPUT/v2-ci-evidence.json" >/dev/null
+
+      - name: Publish v2 human report and exact metrics
+        run: |
+          cat "$V2_OUTPUT/integration/human-report.md" >> "$GITHUB_STEP_SUMMARY"
+          jq -r '"- v2 denominator: \(.denominator.total) total; CLOSED \(.denominator.CLOSED); UNKNOWN \(.denominator.UNKNOWN); REFUTED \(.denominator.REFUTED)", "- v2 controlled pairs: \(.controlled_pairs|length) integer vectors", "- local validation commands: \(.local_validation_commands|length)", "- root README excluded from inventory: \(.input_repo.root_readme_excluded)"' "$V2_OUTPUT/v2-ci-evidence.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload v2 machine and human evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: measurement-boundary-v2-ci-evidence-${{ github.run_id }}
+          path: ${{ env.V2_OUTPUT }}
+          if-no-files-found: error

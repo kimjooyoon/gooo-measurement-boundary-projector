@@ -1,0 +1,73 @@
+// v2 is authoritative for stage identity, causal coverage, runtime scope, and indicator semantics.
+package "measurement_boundary_v2"
+namespace "gooo.measurement.boundary.v2"
+
+measurement "gooo.metric.product.integration.wall_ms.v2" {
+  stage_id "stage:product-integration"
+  stage "product-integration"
+  step "product-integration/main-lock"
+  start_event "event:product-integration.start"
+  end_event "event:product-integration.end"
+  include "op:product.integration.network-lock"
+  include "op:product.integration.receipt"
+  exclude "op:repository.write"
+  child_process "proc:integration-collector"
+  child_process "proc:network-lock"
+  child_coverage "nested-process-tree"
+  clock "monotonic"
+  resolution_ms 1
+  rss_scope "process-tree"
+  input_receipt "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  output_receipt "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  unit "ms"
+  authority "generated-stage-collector"
+  method "controlled-fixture"
+  scope "product-integration/main-lock/process-tree"
+  identity "repository" "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  identity "commit" "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  direction "lower_is_better"
+  nullable "null+UNKNOWN"
+  precedence "REFUTED" "UNKNOWN" "CLOSED"
+}
+
+measurement "gooo.metric.product.integration.rss_kib.v2" {
+  stage_id "stage:product-integration"
+  stage "product-integration"
+  step "product-integration/main-lock"
+  start_event "event:product-integration.start"
+  end_event "event:product-integration.end"
+  include "op:product.integration.network-lock"
+  include "op:product.integration.receipt"
+  exclude "op:repository.write"
+  child_process "proc:integration-collector"
+  child_process "proc:network-lock"
+  child_coverage "nested-process-tree"
+  clock "monotonic"
+  resolution_ms 1
+  rss_scope "process-tree"
+  input_receipt "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  output_receipt "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+  unit "KiB"
+  authority "generated-stage-collector"
+  method "controlled-fixture"
+  scope "product-integration/main-lock/process-tree"
+  identity "repository" "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  identity "commit" "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  direction "lower_is_better"
+  nullable "null+UNKNOWN"
+  precedence "REFUTED" "UNKNOWN" "CLOSED"
+}
+
+optional_observation "shared-ledger-v0.49-main-lock" {
+  source "shared-ledger-v0.49"
+  stage_id "stage:shared-ledger-main-lock"
+  step "shared-ledger/main-lock"
+  actual_main_lock_wall_ms 168000
+  product_receipt_baseline_wall_ms 0
+  product_receipt_candidate_wall_ms 0
+  decision "UNKNOWN"
+  reason "MEASUREMENT_SCOPE_MISMATCH"
+  acceptance "optional"
+  required_gate false
+  immutable_input true
+}
