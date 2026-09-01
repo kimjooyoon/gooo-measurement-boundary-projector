@@ -26,10 +26,10 @@ jobs:
           ref: ${{ inputs.tag || github.ref }}
           fetch-depth: 0
 
-      - name: Install Go 1.27
+      - name: Install Go 1.27.x
         uses: actions/setup-go@v6
         with:
-          go-version: 1.27.0
+          go-version: 1.27.x
           cache: false
 
       - name: Build release assets from tag
@@ -37,9 +37,23 @@ jobs:
         run: |
           set -Eeuo pipefail
           case "$RELEASE_TAG" in
-            v0.1.0|v0.1.1) ;;
+            v0.1.0|v0.1.1|v0.2.0) ;;
             *) echo "unsupported release tag $RELEASE_TAG" >&2; exit 64 ;;
           esac
+          manifest_schema="gooo/measurement-boundary/release-manifest/v1"
+          v2_contract=""
+          v2_total=0
+          v2_closed=0
+          v2_unknown=0
+          v2_refuted=0
+          if [[ "$RELEASE_TAG" == "v0.2.0" ]]; then
+            manifest_schema="gooo/measurement-boundary/release-manifest/v2"
+            v2_contract="contracts/measurement-boundary-v2.json"
+            v2_total=12
+            v2_closed=4
+            v2_unknown=4
+            v2_refuted=4
+          fi
           test "$(git cat-file -t "$RELEASE_TAG")" = "tag"
           commit_sha=$(git rev-parse "$RELEASE_TAG^{commit}")
           tag_object_sha=$(git rev-parse "$RELEASE_TAG")
@@ -51,7 +65,7 @@ jobs:
           asset_digest="sha256:$(sha256sum "$release_root/$archive" | awk '{print $1}')"
           asset_size=$(wc -c < "$release_root/$archive" | tr -d ' ')
           printf '%s  %s\n' "$asset_digest" "$archive" > "$release_root/SHA256SUMS"
-          jq -n --arg tag "$RELEASE_TAG" --arg commit "$commit_sha" --arg object "$tag_object_sha" --arg archive "$archive" --arg digest "$asset_digest" --argjson size "$asset_size" '{schema:"gooo/measurement-boundary/release-manifest/v1",tag:$tag,tag_object_sha:$object,commit_sha:$commit,archive:$archive,asset_size_bytes:$size,asset_digest:$digest,self_asserted_immutable:true,external_platform_authority:"github_release_api.immutable",pr_first_conformance:"REFUTED",historical_v0_1_0:{transport_status:"REFUTED",draft:false,prerelease:false,immutable:false,tag_preserved:true,assets_preserved:true,deletion_attempted:false,deletion_count:0,reason:"published before repository immutable policy was enabled"},OPERATIONAL_REFUTED:{exact_count:1,stage:"AUTHORING",step:"OPEN_IMPLEMENTATION_PR_BEFORE_MAIN_INTEGRATION",reason:"INITIAL_IMPLEMENTATION_PUSH_PRECEDED_PR",initial_main_sha:"8c63fb3abb6f6026bbf274bc6b938c54b4fca3de",initial_main_run_id:"33540259958",initial_main_artifact:null,preserved:true}}' > "$release_root/release-manifest.json"
+          jq -n --arg schema "$manifest_schema" --arg tag "$RELEASE_TAG" --arg commit "$commit_sha" --arg object "$tag_object_sha" --arg archive "$archive" --arg digest "$asset_digest" --arg v2_contract "$v2_contract" --argjson size "$asset_size" --argjson v2_total "$v2_total" --argjson v2_closed "$v2_closed" --argjson v2_unknown "$v2_unknown" --argjson v2_refuted "$v2_refuted" '{schema:$schema,tag:$tag,tag_object_sha:$object,commit_sha:$commit,archive:$archive,asset_size_bytes:$size,asset_digest:$digest,self_asserted_immutable:true,external_platform_authority:"github_release_api.immutable",pr_first_conformance:"REFUTED",v2:{contract:$v2_contract,denominator:{total:$v2_total,CLOSED:$v2_closed,UNKNOWN:$v2_unknown,REFUTED:$v2_refuted},optional_v049:{actual_main_lock_wall_ms:168000,product_receipt_baseline_wall_ms:0,product_receipt_candidate_wall_ms:0,decision:"UNKNOWN",reason:"MEASUREMENT_SCOPE_MISMATCH",required_gate:false,immutable_input:true}},historical_v0_1_0:{transport_status:"REFUTED",draft:false,prerelease:false,immutable:false,tag_preserved:true,assets_preserved:true,deletion_attempted:false,deletion_count:0,reason:"published before repository immutable policy was enabled"},historical_v0_1_1:{transport_status:"CLOSED",draft:false,prerelease:false,immutable:true,tag_preserved:true,assets_preserved:true,deletion_attempted:false,deletion_count:0,reason:"immutable release after repository policy remediation"},OPERATIONAL_REFUTED:{exact_count:1,stage:"AUTHORING",step:"OPEN_IMPLEMENTATION_PR_BEFORE_MAIN_INTEGRATION",reason:"INITIAL_IMPLEMENTATION_PUSH_PRECEDED_PR",initial_main_sha:"8c63fb3abb6f6026bbf274bc6b938c54b4fca3de",initial_main_run_id:"33540259958",initial_main_artifact:null,preserved:true}}' > "$release_root/release-manifest.json"
           manifest_digest="sha256:$(sha256sum "$release_root/release-manifest.json" | awk '{print $1}')"
           printf '%s  %s\n' "$manifest_digest" release-manifest.json >> "$release_root/SHA256SUMS"
           echo "RELEASE_ROOT=$release_root" >> "$GITHUB_ENV"

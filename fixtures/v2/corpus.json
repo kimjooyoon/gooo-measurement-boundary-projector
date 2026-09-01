@@ -1,0 +1,17 @@
+{
+  "schema": "gooo/measurement-boundary/corpus/v2",
+  "cases": [
+    {"ordinal":1,"case_id":"closed-single-stage-exact-coverage","path":"cases/closed-single-stage-exact-coverage.json","expected":"CLOSED","description":"single stage, exact causal events, stable operations, receipts, and process-tree scope"},
+    {"ordinal":2,"case_id":"closed-nested-child-coverage","path":"cases/closed-nested-child-coverage.json","expected":"CLOSED","description":"nested collector and network-lock child process coverage is exact"},
+    {"ordinal":3,"case_id":"closed-same-scope-matched-pair","path":"cases/closed-same-scope-matched-pair.json","expected":"CLOSED","description":"same scenario/input/contract/fixture/toolchain/runner/job before-after integer pair"},
+    {"ordinal":4,"case_id":"closed-zero-work-zero-duration","path":"cases/closed-zero-work-zero-duration.json","expected":"CLOSED","description":"zero work with explicit zero duration is a valid measured value"},
+    {"ordinal":5,"case_id":"unknown-stage-not-entered","path":"cases/unknown-stage-not-entered.json","expected":"UNKNOWN","description":"declared stage was not entered and has no start/end coverage"},
+    {"ordinal":6,"case_id":"unknown-end-event-missing","path":"cases/unknown-end-event-missing.json","expected":"UNKNOWN","description":"stage started but the causal end event is missing"},
+    {"ordinal":7,"case_id":"unknown-positive-work-below-resolution","path":"cases/unknown-positive-work-below-resolution.json","expected":"UNKNOWN","description":"positive work with wall_ms zero cannot close at one millisecond resolution"},
+    {"ordinal":8,"case_id":"unknown-competing-collector-authority","path":"cases/unknown-competing-collector-authority.json","expected":"UNKNOWN","description":"two collector authorities report the same stage"},
+    {"ordinal":9,"case_id":"refuted-forged-stage-id","path":"cases/refuted-forged-stage-id.json","expected":"REFUTED","description":"observation uses a forged stable stage identity"},
+    {"ordinal":10,"case_id":"refuted-receipt-chain-break","path":"cases/refuted-receipt-chain-break.json","expected":"REFUTED","description":"reported receipt digest breaks the receipt chain"},
+    {"ordinal":11,"case_id":"refuted-output-inside-read-only-input","path":"cases/refuted-output-inside-read-only-input.json","expected":"REFUTED","description":"output is written inside the read-only input scope"},
+    {"ordinal":12,"case_id":"refuted-authority-escalation","path":"cases/refuted-authority-escalation.json","expected":"REFUTED","description":"runtime records repository-write authority"}
+  ]
+}
