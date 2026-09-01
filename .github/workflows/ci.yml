@@ -109,3 +109,87 @@ jobs:
           name: measurement-boundary-ci-evidence-${{ github.run_id }}
           path: ${{ env.EVIDENCE_DIR }}
           if-no-files-found: error
+
+  v2:
+    name: Go 1.27.x v2 contract, conformance, and integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the subject
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Go 1.27.x
+        uses: actions/setup-go@v6
+        with:
+          go-version: 1.27.0
+          cache: false
+
+      - name: Verify Go 1.27.x
+        run: test "$(go env GOVERSION)" = "go1.27.0"
+
+      - name: Prepare v2 caller-owned output roots
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          work_root="$RUNNER_TEMP/gooo-measurement-boundary-v2"
+          echo "V2_WORK_ROOT=$work_root" >> "$GITHUB_ENV"
+          echo "V2_METRICS=$work_root/stage-metrics" >> "$GITHUB_ENV"
+          echo "V2_CONFORMANCE_OUTPUT=$work_root/conformance" >> "$GITHUB_ENV"
+          echo "V2_INTEGRATION_OUTPUT=$work_root/integration" >> "$GITHUB_ENV"
+          mkdir -p "$work_root" "$work_root/stage-metrics"
+
+      - name: Build v2 projector in caller-owned output
+        shell: bash
+        run: bash scripts/measure-stage.sh build "$V2_METRICS/build.json" go build -trimpath -o "$V2_WORK_ROOT/projector" ./cmd/measurement-boundary-projector
+
+      - name: Run exact v2 denominator
+        shell: bash
+        run: bash scripts/measure-stage.sh conformance "$V2_METRICS/conformance.json" bash scripts/v2-conformance.sh "$V2_WORK_ROOT/projector"
+
+      - name: Run generated collector controlled pair
+        shell: bash
+        run: bash scripts/measure-stage.sh integration "$V2_METRICS/integration.json" bash scripts/v2-integration.sh "$V2_WORK_ROOT/projector"
+
+      - name: Record v2 repository inventory and assemble evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          "$V2_WORK_ROOT/projector" inventory --root "$GITHUB_WORKSPACE" --generated-root "$V2_WORK_ROOT" --out "$V2_WORK_ROOT/inventory.json"
+          bash scripts/assemble-v2-evidence.sh \
+            "$V2_CONFORMANCE_OUTPUT" \
+            "$V2_INTEGRATION_OUTPUT" \
+            "$V2_METRICS" \
+            "$V2_WORK_ROOT/inventory.json" \
+            "$V2_WORK_ROOT/v2-ci-evidence.json"
+
+      - name: Assert v2 denominator, optional observation, and authority boundary
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          jq -e '
+            .schema == "gooo/measurement-boundary/ci-evidence/v2" and
+            .denominator == {"total":12,"CLOSED":4,"UNKNOWN":4,"REFUTED":4} and
+            .runtime_authority.repository_writes == 0 and
+            .runtime_authority.local_test_executions == 0 and
+            .runtime_authority.cross_project_required_gates == 0 and
+            .input_repo.root_readme_excluded == true and
+            .v1_history.contract_preserved == true and
+            .v1_history.OPERATIONAL_REFUTED.exact_count == 1 and
+            ([.optional_observations[] | select(.actual_main_lock_wall_ms != 168000 or .product_receipt_baseline_wall_ms != 0 or .product_receipt_candidate_wall_ms != 0 or .decision != "UNKNOWN" or .required_gate != false)] | length) == 0 and
+            .integration.decision == "CLOSED" and .integration.same_ci_job == true and
+            (has("score") | not) and (has("percentage") | not) and (has("average") | not)
+          ' "$V2_WORK_ROOT/v2-ci-evidence.json" >/dev/null
+
+      - name: Publish v2 human report and exact metrics
+        shell: bash
+        run: |
+          cat "$V2_INTEGRATION_OUTPUT/human-report.md" >> "$GITHUB_STEP_SUMMARY"
+          jq -r '"- v2 denominator: \(.denominator.total) total; CLOSED \(.denominator.CLOSED); UNKNOWN \(.denominator.UNKNOWN); REFUTED \(.denominator.REFUTED)", "- v2 controlled pairs: \(.controlled_pairs|length) integer vectors", "- local validation commands: \(.local_validation_commands|length)", "- root README excluded from inventory: \(.input_repo.root_readme_excluded)"' "$V2_WORK_ROOT/v2-ci-evidence.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload v2 machine and human evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: measurement-boundary-v2-ci-evidence-${{ github.run_id }}
+          path: ${{ env.V2_WORK_ROOT }}
+          if-no-files-found: error
