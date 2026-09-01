@@ -77,7 +77,7 @@ type fixture struct {
 type sample struct {
 	MetricID string ` + "`json:\"metric_id\"`" + `
 	Stage string ` + "`json:\"stage\"`" + `
-	Step string ` + "`json:\"step\"`"` + `
+	Step string ` + "`json:\"step\"`" + `
 	StartBoundary string ` + "`json:\"start_boundary\"`" + `
 	EndBoundary string ` + "`json:\"end_boundary\"`" + `
 	IncludedOperations []string ` + "`json:\"included_operations\"`" + `
@@ -101,7 +101,7 @@ type sample struct {
 
 type observation struct {
 	MetricID string ` + "`json:\"metric_id\"`" + `
-	Stage string ` + "`json:\"stage\"`"` + `
+	Stage string ` + "`json:\"stage\"`" + `
 	Step string ` + "`json:\"step\"`" + `
 	StartBoundary string ` + "`json:\"start_boundary\"`" + `
 	EndBoundary string ` + "`json:\"end_boundary\"`" + `
@@ -126,7 +126,7 @@ type observation struct {
 type receipt struct {
 	Schema string ` + "`json:\"schema\"`" + `
 	MetricID string ` + "`json:\"metric_id\"`" + `
-	Stage string ` + "`json:\"stage\"`"` + `
+	Stage string ` + "`json:\"stage\"`" + `
 	Step string ` + "`json:\"step\"`" + `
 	Unit string ` + "`json:\"unit\"`" + `
 	Scope string ` + "`json:\"scope\"`" + `
@@ -141,7 +141,7 @@ type receipt struct {
 
 type consumer struct {
 	Name string ` + "`json:\"name\"`" + `
-	MetricID string ` + "`json:\"metric_id\"`"` + `
+	MetricID string ` + "`json:\"metric_id\"`" + `
 	ReceiptDigest string ` + "`json:\"receipt_digest\"`" + `
 }
 
@@ -162,7 +162,7 @@ type collectorEvidence struct {
 	MeasuredOnce bool ` + "`json:\"measured_once\"`" + `
 	IdentityDigest string ` + "`json:\"identity_digest\"`" + `
 	OutputScope string ` + "`json:\"output_scope\"`" + `
-	RepositoryWrites int ` + "`json:\"repository_writes\"`"` + `
+	RepositoryWrites int ` + "`json:\"repository_writes\"`" + `
 	ApplyAuthority int ` + "`json:\"apply_authority\"`" + `
 	CommitAuthority int ` + "`json:\"commit_authority\"`" + `
 	MergeAuthority int ` + "`json:\"merge_authority\"`" + `
