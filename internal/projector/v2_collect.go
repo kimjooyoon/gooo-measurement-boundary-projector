@@ -70,7 +70,7 @@ func CollectV2Fixture(ir V2SemanticIR, fixturePath, outputDir string) (V2Collect
 	if err := requireOutputOutside(outputDir, filepath.Dir(fixturePath)); err != nil {
 		return V2Collection{}, V2Fixture{}, err
 	}
-	fixtureDigest, data, err := DigestFile(fixturePath)
+	fixtureDigest, _, err := DigestFile(fixturePath)
 	if err != nil {
 		return V2Collection{}, V2Fixture{}, err
 	}
